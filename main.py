@@ -178,6 +178,53 @@ class GerenciadorRelatorios:
             print(f"Idoso: {'Sim' if cliente.idoso else 'Não'}")
             print("-" * 30)
 
+    def imprimir_lista_medicamentos(self, gerenciador_medicamentos):
+        todos_medicamentos_quimioterapicos = list(gerenciador_medicamentos.medicamentos_quimioterapicos.values())
+        todos_medicamentos_fitoterapicos = list(gerenciador_medicamentos.medicamentos_fitoterapicos.values())
+        todos_medicamentos = todos_medicamentos_quimioterapicos + todos_medicamentos_fitoterapicos
+
+        todos_medicamentos_alfabetica = sorted(
+            todos_medicamentos, key=lambda x: x.nome.lower()
+        )
+
+        print('Lista de medicamentos\n')
+        for medicamento in todos_medicamentos_alfabetica:
+            if isinstance(medicamento, MedicamentoQuimioterapico):
+                receita_necessaria = "Sim" if medicamento.necessita_receita else "Não"
+            else:
+                receita_necessaria = "Não"
+            print(f"Nome: {medicamento.nome}")
+            print(f"Composto principal: {medicamento.composto_principal}")
+            print(f"Descrição: {medicamento.descricao}")
+            print(f"Necessita Receita: {receita_necessaria}")
+            print("=" * 30)
+        else:
+            print("Nenhum medicamento encontrado.")
+
+    def imprimir_lista_medicamentos_quimioterapicos(self, gerenciador_medicamentos):
+        quimioterapicos_alfabetica = sorted(
+            gerenciador_medicamentos.medicamentos_quimioterapicos.values(),
+            key=lambda x: x.nome.lower()
+        )
+        print('Lista de medicamentos quimioterapicos\n')
+        for remedio in quimioterapicos_alfabetica:
+            print(f"Remédio: {remedio.nome}")
+            print("-" * 30)
+        else:
+            print("Nenhum medicamento encontrado.")
+
+    def imprimir_lista_medicamentos_fitoterapicos(self, gerenciador_medicamentos):
+        fitoterapicos_alfabetica = sorted(
+            gerenciador_medicamentos.medicamentos_fitoterapicos.values(),
+            key=lambda x: x.nome.lower()
+        )
+        print('Lista de medicamentos fitoterápicos\n')
+        for remedio in fitoterapicos_alfabetica:
+            print(f"Remédio: {remedio.nome}")
+            print("-" * 30)
+        else:
+            print("Nenhum medicamento encontrado.")
+
 # Menu principal
 
 
@@ -198,9 +245,9 @@ def main():
         # print("7 - Realizar Venda")
         # print("8 - Exibir Relatório de Vendas")
         print("9 - Exibir Relatório de Listagem de Clientes")
-        # print("10 - Exibir Relatório de Listagem de Medicamentos")
-        # print("11 - Exibir Relatório de Listagem de Medicamentos Quimioterápicos")
-        # print("12 - Exibir Relatório de Listagem de Medicamentos Fitoterápicos")
+        print("10 - Exibir Relatório de Listagem de Medicamentos")
+        print("11 - Exibir Relatório de Listagem de Medicamentos Quimioterápicos")
+        print("12 - Exibir Relatório de Listagem de Medicamentos Fitoterápicos")
         print("0 - Sair")
         opcao = input("Digite a opção desejada: ")
 
@@ -219,6 +266,12 @@ def main():
         elif opcao == '9':
             gerenciador_relatorios.imprimir_lista_clientes(
                 gerenciador_clientes)
+        elif opcao == '10':    
+            gerenciador_relatorios.imprimir_lista_medicamentos(gerenciador_medicamentos)
+        elif opcao == '11':    
+            gerenciador_relatorios.imprimir_lista_medicamentos_quimioterapicos(gerenciador_medicamentos)
+        elif opcao == '12':    
+            gerenciador_relatorios.imprimir_lista_medicamentos_fitoterapicos(gerenciador_medicamentos)
         # elif para outras opções...
         elif opcao == '0':
             # realizar função para exibir relatório de estatísticas diárias antes de sair
