@@ -2,6 +2,7 @@
 from datetime import datetime
 
 # Classes
+# Classe / Gerenciador de clientes ----------------------------------------------------------------------------------------------
 
 
 class Cliente:
@@ -49,6 +50,8 @@ class GerenciadorClientes:
             print("=" * 30)
         else:
             print("Cliente não encontrado.")
+
+# Classe / Gerenciador de medicamentos ----------------------------------------------------------------------------------------------
 
 
 class Medicamento:
@@ -136,6 +139,8 @@ class GerenciadorMedicamentos:
         else:
             print("Nenhum medicamento encontrado com o termo de busca.")
 
+# Classe / Gerenciador de laboratorios ----------------------------------------------------------------------------------------------
+
 
 class Laboratorio:
     def __init__(self, nome: str, endereco: str, telefone: str, cidade: str, estado: str) -> None:
@@ -163,6 +168,67 @@ class GerenciadorLaboratorios:
         self.laboratorios[nome] = laboratorio
         print("Laboratório cadastrado com sucesso!")
 
+# Classe / Gerenciador de vendas ----------------------------------------------------------------------------------------------
+
+
+class Vendas:
+    def __init__(self, produto_vendido, cliente, valor_total) -> None:
+        self.data_venda = datetime.now()
+        self.produto_vendido: Medicamento
+        self.cliente: Cliente
+        self.valor_total: float
+
+
+class GerenciadorVendas:
+    def __init__(self) -> None:
+        self.carrinho = []
+
+    def exibir_menu(self):
+        print("\n===== MENU DE VENDAS =====")
+        print("Itens no carrinho:")
+        print(self.carrinho)
+        print("1 - Escolher medicamento quimioterapico")
+        print("2 - Escolher medicamento fitoterapico")
+        print("3 - Remover medicamento")
+        print("4 - Realizar o pedido")
+        print("5 - Cancelar o pedido e fechar o menu de vendas")
+
+    def menu_vendas(self, cliente, gerenciador_medicamentos, gerenciador_clientes):
+        self.verificar_cliente(gerenciador_clientes)
+        loop = True
+        if cliente:
+            while loop:
+                self.exibir_menu()
+                escolha = input()
+                if escolha == '1':
+                    self.escolher_medicamento_quimioterapico(
+                        gerenciador_medicamentos)
+                elif escolha == '2':
+                    pass
+        else:
+            print(f'Não existe cliente com o CPF {cliente} cadastrado')
+
+    def verificar_cpf_cliente(gerenciador_clientes):
+        cpf_busca = input(
+            'Insira o CPF do cliente que deseja fazer a compra: ')
+        cliente = gerenciador_clientes.clientes.get(cpf_busca)
+        return cliente
+
+    def escolher_medicamento_quimioterapico(self, gerenciador_relatorios, gerenciador_medicamentos):
+        gerenciador_relatorios.imprimir_lista_medicamentos_quimioterapicos(
+            gerenciador_medicamentos)
+        medicamento = input(
+            'Digite o nome do medicamento que deseja comprar').lower()
+        if gerenciador_medicamentos.medicamentos_quimioterapicos.get(medicamento).lower():
+            compra = gerenciador_medicamentos.medicamentos_quimioterapicos.get(
+                medicamento)
+            self.carrinho.append(compra)
+        else:
+            print(
+                'Não foi encontrado um medicamento com esse nome, favor verificar e tentar novamente')
+
+# Gerenciador de relatorios ----------------------------------------------------------------------------------------------
+
 
 class GerenciadorRelatorios:
     def __init__(self) -> None:
@@ -179,9 +245,12 @@ class GerenciadorRelatorios:
             print("-" * 30)
 
     def imprimir_lista_medicamentos(self, gerenciador_medicamentos):
-        todos_medicamentos_quimioterapicos = list(gerenciador_medicamentos.medicamentos_quimioterapicos.values())
-        todos_medicamentos_fitoterapicos = list(gerenciador_medicamentos.medicamentos_fitoterapicos.values())
-        todos_medicamentos = todos_medicamentos_quimioterapicos + todos_medicamentos_fitoterapicos
+        todos_medicamentos_quimioterapicos = list(
+            gerenciador_medicamentos.medicamentos_quimioterapicos.values())
+        todos_medicamentos_fitoterapicos = list(
+            gerenciador_medicamentos.medicamentos_fitoterapicos.values())
+        todos_medicamentos = todos_medicamentos_quimioterapicos + \
+            todos_medicamentos_fitoterapicos
 
         todos_medicamentos_alfabetica = sorted(
             todos_medicamentos, key=lambda x: x.nome.lower()
@@ -225,13 +294,14 @@ class GerenciadorRelatorios:
         else:
             print("Nenhum medicamento encontrado.")
 
-# Menu principal
+# Menu principal ----------------------------------------------------------------------------------------------
 
 
 def main():
     gerenciador_clientes = GerenciadorClientes()
     gerenciador_medicamentos = GerenciadorMedicamentos()
     gerenciador_laboratorios = GerenciadorLaboratorios()
+    gerenciador_vendas = GerenciadorVendas()
     gerenciador_relatorios = GerenciadorRelatorios()
 
     while True:
@@ -242,7 +312,7 @@ def main():
         print("4 - Cadastrar Laboratório")
         print("5 - Buscar Cliente por CPF")
         print("6 - Buscar Medicamento por Nome/Laboratório/Descrição")
-        # print("7 - Realizar Venda")
+        print("7 - Realizar Venda")
         # print("8 - Exibir Relatório de Vendas")
         print("9 - Exibir Relatório de Listagem de Clientes")
         print("10 - Exibir Relatório de Listagem de Medicamentos")
@@ -263,15 +333,20 @@ def main():
             gerenciador_clientes.buscar_cliente_por_cpf()
         elif opcao == '6':
             gerenciador_medicamentos.buscar_medicamento()
+        elif opcao == '7':
+            gerenciador_vendas.menu_vendas()
         elif opcao == '9':
             gerenciador_relatorios.imprimir_lista_clientes(
                 gerenciador_clientes)
-        elif opcao == '10':    
-            gerenciador_relatorios.imprimir_lista_medicamentos(gerenciador_medicamentos)
-        elif opcao == '11':    
-            gerenciador_relatorios.imprimir_lista_medicamentos_quimioterapicos(gerenciador_medicamentos)
-        elif opcao == '12':    
-            gerenciador_relatorios.imprimir_lista_medicamentos_fitoterapicos(gerenciador_medicamentos)
+        elif opcao == '10':
+            gerenciador_relatorios.imprimir_lista_medicamentos(
+                gerenciador_medicamentos)
+        elif opcao == '11':
+            gerenciador_relatorios.imprimir_lista_medicamentos_quimioterapicos(
+                gerenciador_medicamentos)
+        elif opcao == '12':
+            gerenciador_relatorios.imprimir_lista_medicamentos_fitoterapicos(
+                gerenciador_medicamentos)
         # elif para outras opções...
         elif opcao == '0':
             # realizar função para exibir relatório de estatísticas diárias antes de sair
