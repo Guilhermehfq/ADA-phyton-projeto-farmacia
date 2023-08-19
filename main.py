@@ -14,10 +14,19 @@ class Cliente:
 
     def calcular_idoso(self) -> bool:
         data_atual = datetime.now()
-        ano_nascimento = int(self.data_nascimento.split("/")[-1])
+        ano_nascimento = int(self.data_nascimento.split("/")[2])
+        mes_nascimento = int(self.data_nascimento.split("/")[1])
+        dia_nascimento = int(self.data_nascimento.split("/")[0])
+
         ano_atual = data_atual.year
+        mes_atual = data_atual.month
+        dia_atual = data_atual.day
 
         idade = ano_atual - ano_nascimento
+
+        if mes_atual < mes_nascimento or (mes_atual == mes_nascimento and dia_atual < dia_nascimento):
+            idade -= 1
+
         return idade > 65
 
 
@@ -168,114 +177,6 @@ class GerenciadorLaboratorios:
         self.laboratorios[nome] = laboratorio
         print("Laboratório cadastrado com sucesso!")
 
-# Classe / Gerenciador de vendas ----------------------------------------------------------------------------------------------
-
-
-class Venda:
-    def __init__(self, cliente):
-        self.data_hora = datetime.now()
-        self.cliente = cliente
-        self.produtos = []
-        self.valor_total = 0
-
-    def adicionar_produto(self, produto, quantidade):
-        self.produtos.append({"produto": produto, "quantidade": quantidade})
-
-    def calcular_valor_total(self):
-        valor_total = sum(item["produto"].valor_unitario *
-                          item["quantidade"] for item in self.produtos)
-
-        if self.cliente.idoso:
-            valor_total *= 0.8
-
-        if valor_total > 150 and not self.cliente.idoso:
-            valor_total *= 0.9
-
-        self.valor_total = valor_total
-        return valor_total
-
-
-class GerenciadorVendas:
-    def __init__(self, gerenciador_clientes, gerenciador_medicamentos):
-        self.gerenciador_clientes = gerenciador_clientes
-        self.gerenciador_medicamentos = gerenciador_medicamentos
-        self.vendas_realizadas = []
-
-    def buscar_medicamento_pelo_nome(self, nome_medicamento):
-        todos_medicamentos = list(self.gerenciador_medicamentos.medicamentos_quimioterapicos.values(
-        )) + list(self.gerenciador_medicamentos.medicamentos_fitoterapicos.values())
-        for medicamento in todos_medicamentos:
-            if nome_medicamento.lower() in medicamento.nome.lower():
-                return medicamento
-        return None
-
-    def realizar_venda(self):
-        cpf_cliente = input("Digite o CPF do cliente: ")
-        cliente = self.gerenciador_clientes.clientes.get(cpf_cliente)
-        if not cliente:
-            print("Cliente não encontrado.")
-            return
-
-        venda = Venda(cliente)
-        medicamentos_controlados = []
-
-        while True:
-            nome_medicamento = input(
-                "Digite o nome do medicamento ou 'fim' para finalizar: ").lower()
-            if nome_medicamento == 'fim':
-                break
-
-            medicamento = self.buscar_medicamento_pelo_nome(nome_medicamento)
-            if not medicamento:
-                print("Medicamento não encontrado.")
-                continue
-
-            quantidade = int(
-                input(f"Digite a quantidade de '{medicamento.nome}' a ser vendida: "))
-            venda.adicionar_produto(medicamento, quantidade)
-            print(f"'{medicamento.nome}' adicionado à venda.")
-
-            if isinstance(medicamento, MedicamentoQuimioterapico) and medicamento.necessita_receita:
-                medicamentos_controlados.append(medicamento.nome)
-
-        valor_total = venda.calcular_valor_total()
-        print(f"Valor total da venda: R${valor_total:.2f}")
-
-        if medicamentos_controlados:
-            print(
-                "Atenção: Verifique a receita para os seguintes medicamentos controlados:")
-            for nome_controlado in medicamentos_controlados:
-                print(f"- {nome_controlado}")
-
-        self.vendas_realizadas.append({"cliente": cliente, "venda": venda})
-        print("Venda realizada com sucesso!")
-
-    def listar_vendas(self):
-        vendas_por_cliente = {}
-
-        for venda_info in self.vendas_realizadas:
-            cliente = venda_info["cliente"]
-            venda = venda_info["venda"]
-
-            if cliente not in vendas_por_cliente:
-                vendas_por_cliente[cliente] = []
-            vendas_por_cliente[cliente].append(venda)
-
-        print("\n===== LISTA DE VENDAS REALIZADAS =====")
-        for cliente, vendas in vendas_por_cliente.items():
-            print(f"Cliente: {cliente.nome}")
-            print(f"CPF: {cliente.cpf}")
-            for venda in vendas:
-                print(f"Data e Hora da Venda: {venda.data_hora}")
-                print("Produtos:")
-                for item in venda.produtos:
-                    print(
-                        f"  - {item['produto'].nome}: {item['quantidade']} unidades")
-                print(f"Valor Total: R${venda.valor_total:.2f}")
-                print("-" * 40)
-            print("=" * 40)
-        print("=" * 40)
-
 # Gerenciador de relatorios ----------------------------------------------------------------------------------------------
 
 
@@ -345,72 +246,6 @@ class GerenciadorRelatorios:
         else:
             print("Nenhum medicamento encontrado.")
 
-    def imprimir_relatorio_diario(self, gerenciador_vendas, gerenciador_medicamentos):
-        total_quimioterapico = 0
-        total_fitoterapico = 0
-
-        for venda_info in gerenciador_vendas.vendas_realizadas:
-            venda = venda_info["venda"]
-            for item in venda.produtos:
-                medicamento = item["produto"]
-                quantidade = item["quantidade"]
-                valor_total_item = medicamento.valor_unitario * quantidade
-
-                if isinstance(medicamento, MedicamentoQuimioterapico):
-                    total_quimioterapico += valor_total_item
-                elif isinstance(medicamento, MedicamentoFitoterapico):
-                    total_fitoterapico += valor_total_item
-# Verificar qual foi o medicamento mais vendido e em qual quantidade
-        medicamento_mais_vendido = None
-        quantidade_do_mais_vendido = 0
-        valor_total_do_mais_vendido = 0
-
-        for medicamento in gerenciador_medicamentos.medicamentos_quimioterapicos.values():
-            medicamento_quantidade_vendida = sum(
-                item["quantidade"] for venda_info in gerenciador_vendas.vendas_realizadas
-                for item in venda_info["venda"].produtos if item["produto"] == medicamento
-            )
-            if medicamento_quantidade_vendida > quantidade_do_mais_vendido:
-                medicamento_mais_vendido = medicamento
-                quantidade_do_mais_vendido = medicamento_quantidade_vendida
-                valor_total_do_mais_vendido = medicamento_mais_vendido.valor_unitario * \
-                    quantidade_do_mais_vendido
-
-        for medicamento in gerenciador_medicamentos.medicamentos_fitoterapicos.values():
-            medicamento_quantidade_vendida = sum(
-                item["quantidade"] for venda_info in gerenciador_vendas.vendas_realizadas
-                for item in venda_info["venda"].produtos if item["produto"] == medicamento
-            )
-            if medicamento_quantidade_vendida > quantidade_do_mais_vendido:
-                medicamento_mais_vendido = medicamento
-                quantidade_do_mais_vendido = medicamento_quantidade_vendida
-                valor_total_do_mais_vendido = medicamento_mais_vendido.valor_unitario * \
-                    quantidade_do_mais_vendido
-
-# Impressão do relatorio diário
-
-        print("\n===== RELATÓRIO DIÁRIO =====")
-        print("Remédio mais vendido:")
-        if medicamento_mais_vendido:
-            print(f"Nome: {medicamento_mais_vendido.nome}")
-            print(f"Quantidade vendida: {quantidade_do_mais_vendido} unidades")
-            print(f"Valor total: R${valor_total_do_mais_vendido:.2f}")
-        else:
-            print("Nenhum medicamento vendido no dia.")
-
-        total_pessoas_atendidas = len(gerenciador_vendas.vendas_realizadas)
-        print(f"Quantidade de pessoas atendidas: {total_pessoas_atendidas}")
-
-        print("Número de remédios Quimioterápicos vendidos no dia:")
-        print(f"Quantidade vendida: {total_quimioterapico} unidades")
-        print(f"Valor total: R${total_quimioterapico:.2f}")
-
-        print("Número de remédios Fitoterápicos vendidos no dia:")
-        print(f"Quantidade vendida: {total_fitoterapico} unidades")
-        print(f"Valor total: R${total_fitoterapico:.2f}")
-
-        print("=" * 30)
-
 # Menu principal -------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -418,10 +253,7 @@ def main():
     gerenciador_clientes = GerenciadorClientes()
     gerenciador_medicamentos = GerenciadorMedicamentos()
     gerenciador_laboratorios = GerenciadorLaboratorios()
-    gerenciador_relatorios = GerenciadorRelatorios(
-        gerenciador_vendas, gerenciador_medicamentos)
-    gerenciador_vendas = GerenciadorVendas(
-        gerenciador_clientes, gerenciador_medicamentos)
+    gerenciador_relatorios = GerenciadorRelatorios()
 
     while True:
         print("\n===== MENU =====")
@@ -431,8 +263,8 @@ def main():
         print("4 - Cadastrar Laboratório")
         print("5 - Buscar Cliente por CPF")
         print("6 - Buscar Medicamento por Nome/Laboratório/Descrição")
-        print("7 - Realizar Venda")
-        print("8 - Exibir Relatório de Vendas")
+    #    print("7 - Realizar Venda")
+    #    print("8 - Exibir Relatório de Vendas")
         print("9 - Exibir Relatório de Listagem de Clientes")
         print("10 - Exibir Relatório de Listagem de Medicamentos")
         print("11 - Exibir Relatório de Listagem de Medicamentos Quimioterápicos")
@@ -453,9 +285,9 @@ def main():
         elif opcao == '6':
             gerenciador_medicamentos.buscar_medicamento()
         elif opcao == '7':
-            gerenciador_vendas.realizar_venda()
+            pass
         elif opcao == '8':
-            gerenciador_vendas.listar_vendas()
+            pass
         elif opcao == '9':
             gerenciador_relatorios.imprimir_lista_clientes(
                 gerenciador_clientes)
@@ -469,8 +301,7 @@ def main():
             gerenciador_relatorios.imprimir_lista_medicamentos_fitoterapicos(
                 gerenciador_medicamentos)
         elif opcao == '0':
-            gerenciador_relatorios.imprimir_relatorio_diario(
-                gerenciador_vendas, gerenciador_medicamentos)
+            # Funçao do relatorio diario
             break
         else:
             print("Opção inválida. Por favor, digite uma opção válida.")
